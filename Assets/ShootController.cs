@@ -22,12 +22,46 @@ public class ShootController : MonoBehaviour
     [SerializeField]
     float m_shootingInterval = 0.1f;
 
+    [SerializeField]
+    float m_shotgunAngle = 15f;
+
+    private int weaponType = 1;
+
     void Fire()
     {
-        StartCoroutine(FireAsync(m_shootCountInOneFire));
+        IEnumerator shootingMethod;
+
+        if (weaponType == 1)
+            shootingMethod = ShotgunFireAsync(m_bulletCountInOneShot);
+        else if (weaponType == 2)
+            shootingMethod = CircleFireAsync(m_shootCountInOneFire);
+        else
+            shootingMethod = ShotgunFireAsync(m_bulletCountInOneShot);
+
+        StartCoroutine(shootingMethod);
     }
 
-    IEnumerator FireAsync(int shootCount)
+    IEnumerator ShotgunFireAsync(int shootCount)
+    {
+        if (shootCount % 2 == 0) shootCount++;
+
+        for (int i = 0; i < shootCount; i++)
+        {
+            Quaternion q = m_bulletPrefab.transform.rotation;
+            GameObject go = Instantiate(m_bulletPrefab, m_muzzlePoint.position, q);
+
+            if (i > 0)
+            {
+                if (i % 2 == 1)
+                    go.transform.Rotate(new Vector3(0f, 0f, m_shotgunAngle * (i / 2 + 1)));
+                else
+                    go.transform.Rotate(new Vector3(0f, 0f, -1 * m_shotgunAngle * i / 2));
+            }
+        }
+        yield return null;
+    }
+
+    IEnumerator CircleFireAsync(int shootCount)
     {
         for (int j = 0; j < shootCount; j++)
         {
@@ -43,10 +77,10 @@ public class ShootController : MonoBehaviour
     }
 
 	void Update () {
-		if (Input.GetButtonDown("Fire1"))
-        {
-            Debug.Log("Fire1.");
-            Fire();
-        }
+        if (Input.GetKeyUp(KeyCode.Alpha1)) weaponType = 1;
+
+        if (Input.GetKeyUp(KeyCode.Alpha2)) weaponType = 2;
+
+        if (Input.GetButtonDown("Fire1")) Fire();
 	}
 }
